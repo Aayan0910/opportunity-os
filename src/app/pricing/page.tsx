@@ -8,7 +8,7 @@ import Button from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollReveal, StaggerChildren, StaggerItem } from "@/components/ui/animations";
-import { pricingPlans } from "@/data/opportunities";
+import { pricingPlans, featureComparison } from "@/data/opportunities";
 import { cn } from "@/lib/utils";
 import { Check, X, Sparkles, Zap, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -228,6 +228,44 @@ export default function PricingPage() {
             </StaggerItem>
           ))}
         </StaggerChildren>
+
+        {/* Feature Comparison Table */}
+        <ScrollReveal>
+          <div className="mb-20">
+            <div className="text-center mb-10">
+              <Badge variant="default" size="md" className="mb-4">
+                Compare Plans
+              </Badge>
+              <h2 className="text-2xl sm:text-3xl font-bold">
+                Feature-by-feature comparison
+              </h2>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[600px]">
+                <thead>
+                  <tr className="border-b border-zinc-200 dark:border-zinc-800">
+                    <th className="text-left py-4 px-4 text-sm font-semibold text-zinc-900 dark:text-zinc-100">Feature</th>
+                    <th className="text-center py-4 px-4 text-sm font-semibold text-zinc-500">Explorer</th>
+                    <th className="text-center py-4 px-4 text-sm font-semibold text-blue-600 dark:text-blue-400">Trial Pass</th>
+                    <th className="text-center py-4 px-4 text-sm font-semibold text-violet-600 dark:text-violet-400">Pathfinder</th>
+                    <th className="text-center py-4 px-4 text-sm font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/5 rounded-t-xl">Navigator</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {featureComparison.map((row, i) => (
+                    <tr key={row.feature} className={cn("border-b border-zinc-100 dark:border-zinc-800/50", i % 2 === 0 && "bg-zinc-50/50 dark:bg-zinc-900/30")}>
+                      <td className="py-3 px-4 text-sm font-medium text-zinc-900 dark:text-zinc-100">{row.feature}</td>
+                      <td className="py-3 px-4 text-center text-sm text-zinc-500">{row.free}</td>
+                      <td className="py-3 px-4 text-center text-sm text-blue-600 dark:text-blue-400">{row.trial}</td>
+                      <td className="py-3 px-4 text-center text-sm text-violet-600 dark:text-violet-400">{row.pathfinder}</td>
+                      <td className="py-3 px-4 text-center text-sm font-medium text-amber-600 dark:text-amber-400 bg-amber-50/50 dark:bg-amber-500/5">{row.navigator}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </ScrollReveal>
 
         {/* FAQ */}
         <ScrollReveal>

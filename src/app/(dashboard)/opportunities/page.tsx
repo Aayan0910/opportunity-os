@@ -224,7 +224,12 @@ export default function OpportunitiesPage() {
                   </div>
 
                   <div className="flex items-center gap-2 mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800">
-                    <Button variant="primary" size="sm" className="flex-1">
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => window.open(opp.link, "_blank", "noopener,noreferrer")}
+                    >
                       Apply Now <ArrowUpRight className="h-3.5 w-3.5" />
                     </Button>
                     <Button

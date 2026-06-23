@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { useUserAuth } from "@/hooks/use-auth";
 import { usePlan } from "@/hooks/use-plan";
 import PlanBadge from "@/components/ui/plan-badge";
+import UpgradeBanner from "@/components/ui/upgrade-banner";
 import {
   LayoutDashboard,
   User,
@@ -16,7 +17,6 @@ import {
   Search,
   Users,
   Settings,
-  Sparkles,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -120,19 +120,7 @@ export default function Sidebar() {
       </div>
 
       {/* Upgrade Banner */}
-      <div className="px-3 pb-3">
-        <Link href="/pricing" className="block p-4 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-700 text-white hover:from-violet-500 hover:to-indigo-600 transition-all duration-300 group">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/20">
-              <Sparkles className="h-3.5 w-3.5" />
-            </div>
-            <span className="text-xs font-bold">Upgrade to Navigator</span>
-          </div>
-          <p className="text-[11px] text-violet-200 leading-relaxed">
-            Unlock AI resume builder, missed opportunities detector & more
-          </p>
-        </Link>
-      </div>
+      <UpgradeBanner />
     </aside>
   );
 }

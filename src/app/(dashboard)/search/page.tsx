@@ -324,7 +324,11 @@ export default function SearchPage() {
                       >
                         {isSaved ? <BookmarkCheck className="h-3.5 w-3.5 text-violet-500" /> : <Bookmark className="h-3.5 w-3.5" />}
                       </Button>
-                      <Button variant="primary" size="xs">
+                      <Button
+                        variant="primary"
+                        size="xs"
+                        onClick={() => window.open(opp.link, "_blank", "noopener,noreferrer")}
+                      >
                         Apply <ArrowUpRight className="h-3 w-3" />
                       </Button>
                     </div>

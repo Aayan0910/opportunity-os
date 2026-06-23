@@ -1,0 +1,203 @@
+"use client";
+
+import Link from "next/link";
+import { useState } from "react";
+import Navbar from "@/components/layout/navbar";
+import Footer from "@/components/layout/footer";
+import Button from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { ScrollReveal, StaggerChildren, StaggerItem } from "@/components/ui/animations";
+import { pricingPlans } from "@/data/opportunities";
+import { cn } from "@/lib/utils";
+import { Check, X, Sparkles, Zap, ChevronDown } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+
+const faqs = [
+  {
+    q: "Can I switch plans anytime?",
+    a: "Yes, you can upgrade or downgrade your plan at any time. Changes take effect immediately with prorated billing.",
+  },
+  {
+    q: "What payment methods do you accept?",
+    a: "We accept UPI, debit cards, credit cards, and net banking through Razorpay. All transactions are secure and encrypted.",
+  },
+  {
+    q: "Is there a refund policy?",
+    a: "Yes, we offer a 7-day money-back guarantee on all paid plans. No questions asked.",
+  },
+  {
+    q: "What happens when my free plan limits are reached?",
+    a: "You'll be prompted to upgrade. Your existing data is preserved, and you can continue using the platform with limited features.",
+  },
+  {
+    q: "Do you offer student discounts?",
+    a: "Our Pathfinder plan is already priced affordably for students. We also occasionally run special discounts for early adopters.",
+  },
+];
+
+function FAQItem({ faq }: { faq: (typeof faqs)[number] }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between p-5 text-left hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors"
+      >
+        <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 pr-4">
+          {faq.q}
+        </span>
+        <motion.div
+          animate={{ rotate: open ? 180 : 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          <ChevronDown className="h-4 w-4 text-zinc-400 shrink-0" />
+        </motion.div>
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="px-5 pb-5 text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
+              {faq.a}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+export default function PricingPage() {
+  return (
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-24">
+        {/* Header */}
+        <ScrollReveal>
+          <div className="text-center mb-16">
+            <Badge variant="glow" size="md" className="mb-4">
+              <Zap className="h-3.5 w-3.5" />
+              Simple Pricing
+            </Badge>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
+              Choose the right plan for you
+            </h1>
+            <p className="text-lg text-zinc-600 dark:text-zinc-400 max-w-2xl mx-auto">
+              Start free and upgrade as you grow. All plans include core features to get you started.
+            </p>
+          </div>
+        </ScrollReveal>
+
+        {/* Pricing Cards */}
+        <StaggerChildren className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-20" staggerDelay={0.08}>
+          {pricingPlans.map((plan) => (
+            <StaggerItem key={plan.planId}>
+              <Card
+                hover
+                className={cn(
+                  "relative h-full",
+                  plan.popular &&
+                    "border-violet-500 dark:border-violet-500 shadow-xl shadow-violet-500/10 ring-1 ring-violet-500/20"
+                )}
+              >
+                {plan.popular && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-xs font-bold shadow-lg shadow-violet-500/30">
+                      <Sparkles className="h-3 w-3" />
+                      Most Popular
+                    </span>
+                  </div>
+                )}
+                <CardContent className="p-6 flex flex-col h-full">
+                  <div className="mb-4">
+                    <h3 className="text-lg font-semibold">{plan.name}</h3>
+                    <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+                      {plan.description}
+                    </p>
+                  </div>
+
+                  <div className="mb-6">
+                    <span className="text-4xl font-bold">
+                      {plan.price === 0 ? "Free" : `₹${plan.price}`}
+                    </span>
+                    {plan.price > 0 && (
+                      <span className="text-zinc-500 dark:text-zinc-400 text-sm ml-1">
+                        {plan.period}
+                      </span>
+                    )}
+                  </div>
+
+                  <Link href="/signup" className="mb-6">
+                    <Button
+                      variant={plan.popular ? "glow" : "outline"}
+                      className="w-full"
+                      size="lg"
+                    >
+                      {plan.cta}
+                    </Button>
+                  </Link>
+
+                  {/* Features */}
+                  <ul className="space-y-2.5 mb-4">
+                    {plan.features.map((feature) => (
+                      <li key={feature} className="flex items-start gap-2.5">
+                        <div className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-500/10 shrink-0 mt-0.5">
+                          <Check className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+                        </div>
+                        <span className="text-sm text-zinc-600 dark:text-zinc-400">
+                          {feature}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  {/* Excluded */}
+                  {plan.excluded.length > 0 && (
+                    <ul className="space-y-2.5 mt-auto pt-4 border-t border-zinc-100 dark:border-zinc-800">
+                      {plan.excluded.map((feature) => (
+                        <li key={feature} className="flex items-start gap-2.5">
+                          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800 shrink-0 mt-0.5">
+                            <X className="h-3 w-3 text-zinc-400" />
+                          </div>
+                          <span className="text-sm text-zinc-400 dark:text-zinc-500">
+                            {feature}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </CardContent>
+              </Card>
+            </StaggerItem>
+          ))}
+        </StaggerChildren>
+
+        {/* FAQ */}
+        <ScrollReveal>
+          <div className="max-w-3xl mx-auto">
+            <div className="text-center mb-10">
+              <Badge variant="default" size="md" className="mb-4">
+                FAQ
+              </Badge>
+              <h2 className="text-2xl sm:text-3xl font-bold">
+                Frequently Asked Questions
+              </h2>
+            </div>
+            <div className="space-y-3">
+              {faqs.map((faq) => (
+                <FAQItem key={faq.q} faq={faq} />
+              ))}
+            </div>
+          </div>
+        </ScrollReveal>
+      </div>
+      <Footer />
+    </div>
+  );
+}

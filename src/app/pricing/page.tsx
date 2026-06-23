@@ -74,45 +74,12 @@ function FAQItem({ faq }: { faq: (typeof faqs)[number] }) {
 }
 
 export default function PricingPage() {
-  const [paymentLoading, setPaymentLoading] = useState<string | null>(null);
-
-  const handlePayment = async (planId: string, price: number) => {
+  const handlePayment = (planId: string, price: number) => {
     if (price === 0) {
       window.location.href = "/signup";
       return;
     }
-
-    setPaymentLoading(planId);
-
-    // Show UPI payment details
-    const upiId = "aayanc@fam";
-    const amount = price;
-    const merchantName = "Opportunity OS";
-
-    // Create UPI payment link
-    const upiUrl = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(merchantName)}&am=${amount}&cu=INR`;
-
-    // Show payment modal with UPI details
-    const confirmed = window.confirm(
-      `Payment Details:\n\n` +
-      `Plan: ${planId.charAt(0).toUpperCase() + planId.slice(1)}\n` +
-      `Amount: ₹${amount}\n` +
-      `UPI ID: ${upiId}\n` +
-      `Merchant: ${merchantName}\n\n` +
-      `Click OK to proceed to UPI payment, or Cancel to go back.`
-    );
-
-    if (confirmed) {
-      // Try to open UPI app
-      window.open(upiUrl, "_blank");
-
-      // After payment, redirect to dashboard
-      setTimeout(() => {
-        window.location.href = "/dashboard";
-      }, 3000);
-    }
-
-    setPaymentLoading(null);
+    window.location.href = `/payment?plan=${planId}`;
   };
 
   return (
@@ -186,7 +153,6 @@ export default function PricingPage() {
                         variant={plan.popular ? "glow" : "outline"}
                         className="w-full"
                         size="lg"
-                        loading={paymentLoading === plan.planId}
                         onClick={() => handlePayment(plan.planId, plan.price)}
                       >
                         {plan.cta}

@@ -4,6 +4,8 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 
 export type PlanId = "free" | "trial" | "pathfinder" | "navigator";
 
+export type PaymentStatus = "none" | "pending" | "approved" | "rejected";
+
 interface PlanLimits {
   maxRecommendations: number;
   maxSaves: number;
@@ -73,6 +75,20 @@ const planLimits: Record<PlanId, PlanLimits> = {
   },
 };
 
+export interface PaymentRequest {
+  id: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  planId: PlanId;
+  amount: number;
+  upiTransactionId: string;
+  status: PaymentStatus;
+  requestedAt: string;
+  reviewedAt?: string;
+  reviewedBy?: string;
+}
+
 interface PlanContextType {
   plan: PlanId;
   limits: PlanLimits;
@@ -83,6 +99,10 @@ interface PlanContextType {
   useRecommendation: () => void;
   useSave: () => void;
   setPlan: (plan: PlanId) => void;
+  paymentStatus: PaymentStatus;
+  pendingPayment: PaymentRequest | null;
+  submitPayment: (planId: PlanId, amount: number, upiTransactionId: string) => void;
+  getPaymentHistory: () => PaymentRequest[];
 }
 
 const PlanContext = createContext<PlanContextType | undefined>(undefined);
@@ -91,6 +111,8 @@ export function PlanProvider({ children }: { children: ReactNode }) {
   const [plan, setPlanState] = useState<PlanId>("free");
   const [recommendationsUsed, setRecommendationsUsed] = useState(0);
   const [savesUsed, setSavesUsed] = useState(0);
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>("none");
+  const [pendingPayment, setPendingPayment] = useState<PaymentRequest | null>(null);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -103,6 +125,24 @@ export function PlanProvider({ children }: { children: ReactNode }) {
     if (recs) setRecommendationsUsed(parseInt(recs, 10) || 0);
     const saves = localStorage.getItem("opp-os-saves-used");
     if (saves) setSavesUsed(parseInt(saves, 10) || 0);
+
+    // Check payment status
+    const allPayments = getAllPayments();
+    const userId = localStorage.getItem("opp-os-user-email") || "";
+    const userPending = allPayments.find(
+      (p) => p.userEmail === userId && p.status === "pending"
+    );
+    const userApproved = allPayments.find(
+      (p) => p.userEmail === userId && p.status === "approved"
+    );
+    if (userPending) {
+      setPaymentStatus("pending");
+      setPendingPayment(userPending);
+    } else if (userApproved) {
+      setPaymentStatus("approved");
+    } else {
+      setPaymentStatus("none");
+    }
   }, []);
 
   const limits = planLimits[plan];
@@ -133,6 +173,45 @@ export function PlanProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("opp-os-plan", newPlan);
   };
 
+  const getAllPayments = (): PaymentRequest[] => {
+    if (typeof window === "undefined") return [];
+    const data = localStorage.getItem("opp-os-payments");
+    return data ? JSON.parse(data) : [];
+  };
+
+  const saveAllPayments = (payments: PaymentRequest[]) => {
+    localStorage.setItem("opp-os-payments", JSON.stringify(payments));
+  };
+
+  const submitPayment = (planId: PlanId, amount: number, upiTransactionId: string) => {
+    const userStr = localStorage.getItem("opp-os-user");
+    const user = userStr ? JSON.parse(userStr) : null;
+
+    const payment: PaymentRequest = {
+      id: `pay_${Date.now()}`,
+      userId: user?.email || "unknown",
+      userName: user?.name || "Unknown",
+      userEmail: user?.email || "unknown",
+      planId,
+      amount,
+      upiTransactionId,
+      status: "pending",
+      requestedAt: new Date().toISOString(),
+    };
+
+    const allPayments = getAllPayments();
+    allPayments.push(payment);
+    saveAllPayments(allPayments);
+
+    setPaymentStatus("pending");
+    setPendingPayment(payment);
+    localStorage.setItem("opp-os-user-email", user?.email || "");
+  };
+
+  const getPaymentHistory = (): PaymentRequest[] => {
+    return getAllPayments();
+  };
+
   return (
     <PlanContext.Provider
       value={{
@@ -145,6 +224,10 @@ export function PlanProvider({ children }: { children: ReactNode }) {
         useRecommendation,
         useSave,
         setPlan,
+        paymentStatus,
+        pendingPayment,
+        submitPayment,
+        getPaymentHistory,
       }}
     >
       {children}

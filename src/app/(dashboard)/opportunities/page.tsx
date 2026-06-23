@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import Badge from "@/components/ui/badge";
@@ -8,6 +8,10 @@ import Button from "@/components/ui/button";
 import { ScrollReveal, StaggerChildren, StaggerItem } from "@/components/ui/animations";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { mockOpportunities, categories, type Opportunity } from "@/data/opportunities";
+import { useUserAuth } from "@/hooks/use-auth";
+import { usePlan } from "@/hooks/use-plan";
+import LimitsBanner from "@/components/ui/limits-banner";
+import UpgradePrompt from "@/components/ui/upgrade-prompt";
 import { cn, getMatchColor, getMatchBg, formatDate, daysUntil } from "@/lib/utils";
 import {
   Search,
@@ -27,9 +31,16 @@ import {
 } from "lucide-react";
 
 export default function OpportunitiesPage() {
+  const { user } = useUserAuth();
+  const { plan, limits, recommendationsUsed, useRecommendation, canGetRecommendation } = usePlan();
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [sortBy, setSortBy] = useState<"aiScore" | "deadline">("aiScore");
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+  const [viewCount, setViewCount] = useState(0);
+
+  const isFree = plan === "free";
+  const maxRecs = limits.maxRecommendations;
+  const visibleCount = isFree ? Math.min(viewCount + 5, maxRecs) : viewCount + 5;
 
   const toggleSave = (id: string) => {
     setSavedIds((prev) => {
@@ -40,13 +51,47 @@ export default function OpportunitiesPage() {
     });
   };
 
-  const filtered = mockOpportunities
-    .filter((o) => selectedCategory === "All" || o.category === selectedCategory)
-    .sort((a, b) =>
+  const handleViewDetails = (id: string) => {
+    if (isFree && !canGetRecommendation) return;
+    useRecommendation();
+    setViewCount((v) => v + 1);
+  };
+
+  const filtered = useMemo(() => {
+    let results = mockOpportunities;
+
+    // Filter by category
+    if (selectedCategory !== "All") {
+      results = results.filter((o) => o.category === selectedCategory);
+    }
+
+    // If user has profile data, boost matching opportunities
+    if (user?.interests?.length || user?.lookingFor?.length) {
+      results = results.map((opp) => {
+        let boost = 0;
+        const descLower = opp.description.toLowerCase();
+        const catLower = opp.category.toLowerCase();
+        // Boost if category matches lookingFor
+        if (user.lookingFor?.some((lf) => catLower.includes(lf.toLowerCase()))) {
+          boost += 10;
+        }
+        // Boost if interests match description or category
+        if (user.interests?.some((i) => descLower.includes(i.toLowerCase()) || catLower.includes(i.toLowerCase()))) {
+          boost += 5;
+        }
+        return { ...opp, aiScore: (opp.aiScore || 50) + boost };
+      });
+    }
+
+    // Sort
+    results.sort((a, b) =>
       sortBy === "aiScore"
         ? (b.aiScore || 0) - (a.aiScore || 0)
         : daysUntil(a.deadline) - daysUntil(b.deadline)
     );
+
+    return results;
+  }, [selectedCategory, sortBy, user]);
 
   return (
     <div className="space-y-6">
@@ -57,7 +102,9 @@ export default function OpportunitiesPage() {
               Opportunities <Sparkles className="h-6 w-6 text-violet-500" />
             </h1>
             <p className="text-zinc-500 dark:text-zinc-400 mt-1">
-              Discover {filtered.length} opportunities matched to you
+              {user?.interests?.length
+                ? `Showing ${filtered.length} opportunities matched to your interests`
+                : `Discover ${filtered.length} opportunities — complete your profile for better matches`}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -98,8 +145,10 @@ export default function OpportunitiesPage() {
         </div>
       </ScrollReveal>
 
+      {isFree && <LimitsBanner />}
+
       <StaggerChildren className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {filtered.map((opp) => {
+        {filtered.slice(0, visibleCount).map((opp) => {
           const days = daysUntil(opp.deadline);
           const isSaved = savedIds.has(opp.id);
           return (
@@ -201,6 +250,26 @@ export default function OpportunitiesPage() {
             <p className="text-zinc-500 dark:text-zinc-400">Try adjusting your filters</p>
           </div>
         </ScrollReveal>
+      )}
+
+      {isFree && visibleCount < filtered.length && (
+        <div className="text-center">
+          <UpgradePrompt
+            feature="Unlimited Opportunities"
+            description="You've seen {visibleCount} of {filtered.length} opportunities. Upgrade to see all {filtered.length}+ opportunities with AI matching and scoring."
+          />
+        </div>
+      )}
+
+      {!isFree && visibleCount < filtered.length && (
+        <div className="text-center">
+          <Button
+            variant="outline"
+            onClick={() => setViewCount((v) => v + 10)}
+          >
+            Show More
+          </Button>
+        </div>
       )}
     </div>
   );

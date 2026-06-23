@@ -39,7 +39,7 @@ export default function SignupPage() {
 
     const result = signup(name.trim(), email.trim().toLowerCase(), password);
     if (result.success) {
-      router.push("/dashboard");
+      router.push("/onboarding");
     } else {
       setError(result.error || "Signup failed");
     }

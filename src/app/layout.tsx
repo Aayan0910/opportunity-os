@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { AdminAuthProvider } from "@/hooks/use-admin-auth";
 import { UserAuthProvider } from "@/hooks/use-auth";
+import { PlanProvider } from "@/hooks/use-plan";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -50,7 +51,9 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <ThemeProvider>
           <UserAuthProvider>
-            <AdminAuthProvider>{children}</AdminAuthProvider>
+            <AdminAuthProvider>
+              <PlanProvider>{children}</PlanProvider>
+            </AdminAuthProvider>
           </UserAuthProvider>
         </ThemeProvider>
       </body>

@@ -9,6 +9,8 @@ import { Progress } from "@/components/ui/progress";
 import { ScrollReveal, StaggerChildren, StaggerItem } from "@/components/ui/animations";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { roadmapData } from "@/data/opportunities";
+import { usePlan } from "@/hooks/use-plan";
+import UpgradePrompt from "@/components/ui/upgrade-prompt";
 import { cn } from "@/lib/utils";
 import {
   Map,
@@ -41,13 +43,34 @@ const phaseMap: Record<string, string> = {
 };
 
 export default function RoadmapPage() {
+  const { plan, limits } = usePlan();
   const [selectedGoal, setSelectedGoal] = useState("Software Engineer");
   const [activePhase, setActivePhase] = useState("3-month");
 
   const goalData = roadmapData[selectedGoal as keyof typeof roadmapData] || [];
   const currentPhase = goalData.find((p) => phaseMap[p.phase] === activePhase);
-
   const selectedGoalMeta = careerGoals.find((g) => g.id === selectedGoal);
+
+  if (!limits.aiRoadmap) {
+    return (
+      <div className="space-y-6">
+        <ScrollReveal>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
+              Career Roadmap <Map className="h-6 w-6 text-violet-500" />
+            </h1>
+            <p className="text-zinc-500 dark:text-zinc-400 mt-1">
+              AI-generated learning paths for your career goals
+            </p>
+          </div>
+        </ScrollReveal>
+        <UpgradePrompt
+          feature="AI Roadmap Generation"
+          description="Get personalized, step-by-step career roadmaps powered by AI. Available on Trial Pass and above."
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

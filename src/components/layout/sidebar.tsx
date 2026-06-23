@@ -4,7 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
+import { useUserAuth } from "@/hooks/use-auth";
+import { usePlan } from "@/hooks/use-plan";
+import PlanBadge from "@/components/ui/plan-badge";
 import {
   LayoutDashboard,
   User,
@@ -14,12 +16,7 @@ import {
   Search,
   Users,
   Settings,
-  LogOut,
   Sparkles,
-  BookOpen,
-  Trophy,
-  Flame,
-  Target,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -36,6 +33,18 @@ const sidebarLinks = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const { user } = useUserAuth();
+  const { plan, limits, recommendationsUsed, savesUsed } = usePlan();
+
+  const userName = user?.name || "Student";
+  const userInitial = userName.charAt(0).toUpperCase();
+  const courseLabel = user?.course
+    ? user.course.replace("btech", "B.Tech").replace("bsc", "B.Sc").replace("bcom", "B.Com")
+      .replace("ba", "BA").replace("mbbs", "MBBS").replace("llb", "LLB")
+      .replace("mba", "MBA").replace("mtech", "M.Tech").replace("phd", "PhD")
+      .replace("diploma", "Diploma").replace("school", "School").replace("other", "Student")
+    : "Explorer";
+  const yearLabel = user?.year ? ` · ${user.year} Year` : "";
 
   return (
     <aside className="hidden lg:flex flex-col w-[260px] border-r border-zinc-200/60 dark:border-zinc-800/60 bg-white dark:bg-zinc-950 h-[calc(100vh-4rem)] sticky top-16">
@@ -43,13 +52,15 @@ export default function Sidebar() {
       <div className="p-4 border-b border-zinc-200/60 dark:border-zinc-800/60">
         <div className="flex items-center gap-3 p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900/50">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 text-white text-sm font-bold shadow-lg shadow-violet-500/20">
-            S
+            {userInitial}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-sm font-semibold truncate">Student</div>
-            <div className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">Explorer Level</div>
+            <div className="text-sm font-semibold truncate">{userName}</div>
+            <div className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">
+              {courseLabel}{yearLabel}
+            </div>
           </div>
-          <Badge variant="glow" size="sm" dot>Lv.1</Badge>
+          <PlanBadge />
         </div>
       </div>
 
@@ -77,28 +88,34 @@ export default function Sidebar() {
               )}
               <link.icon className={cn("h-[18px] w-[18px] relative z-10", isActive && "text-violet-600 dark:text-violet-400")} />
               <span className="relative z-10">{link.label}</span>
-              {link.href === "/deadlines" && (
-                <span className="ml-auto relative z-10 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold px-1">
-                  5
-                </span>
-              )}
             </Link>
           );
         })}
       </nav>
 
-      {/* XP Progress */}
+      {/* Usage Progress */}
       <div className="px-4 py-3 border-t border-zinc-200/60 dark:border-zinc-800/60">
         <div className="p-3 rounded-xl bg-gradient-to-br from-violet-500/5 to-indigo-500/5 border border-violet-200/30 dark:border-violet-500/10">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-semibold text-zinc-700 dark:text-zinc-300">Your Progress</span>
-            <span className="text-[10px] text-violet-600 dark:text-violet-400 font-bold">120/200 XP</span>
+            <span className="text-[11px] font-semibold text-zinc-700 dark:text-zinc-300">
+              {plan === "free" ? "Free Plan Usage" : "Your Progress"}
+            </span>
+            {plan === "free" && (
+              <span className="text-[10px] text-violet-600 dark:text-violet-400 font-bold">
+                {recommendationsUsed}/{limits.maxRecommendations} recs
+              </span>
+            )}
           </div>
-          <Progress value={120} max={200} size="sm" color="gradient" />
-          <div className="flex items-center gap-1.5 mt-2">
-            <Flame className="h-3 w-3 text-orange-500" />
-            <span className="text-[10px] text-zinc-500">3 day streak</span>
-          </div>
+          {plan === "free" ? (
+            <>
+              <Progress value={recommendationsUsed} max={limits.maxRecommendations} size="sm" color="gradient" />
+              <div className="flex items-center justify-between mt-1.5">
+                <span className="text-[10px] text-zinc-500">{savesUsed}/{limits.maxSaves} saves used</span>
+              </div>
+            </>
+          ) : (
+            <p className="text-[10px] text-zinc-500">Keep exploring to level up</p>
+          )}
         </div>
       </div>
 

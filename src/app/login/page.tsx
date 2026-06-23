@@ -34,7 +34,17 @@ export default function LoginPage() {
 
     const result = login(email.trim().toLowerCase(), password);
     if (result.success) {
-      router.push("/dashboard");
+      const saved = localStorage.getItem("opp-os-user");
+      if (saved) {
+        const profile = JSON.parse(saved);
+        if (profile.onboardingComplete) {
+          router.push("/dashboard");
+        } else {
+          router.push("/onboarding");
+        }
+      } else {
+        router.push("/onboarding");
+      }
     } else {
       setError(result.error || "Login failed");
     }

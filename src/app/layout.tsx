@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { AdminAuthProvider } from "@/hooks/use-admin-auth";
+import { UserAuthProvider } from "@/hooks/use-auth";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -48,7 +49,9 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <ThemeProvider>
-          <AdminAuthProvider>{children}</AdminAuthProvider>
+          <UserAuthProvider>
+            <AdminAuthProvider>{children}</AdminAuthProvider>
+          </UserAuthProvider>
         </ThemeProvider>
       </body>
     </html>

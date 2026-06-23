@@ -20,7 +20,7 @@ const faqs = [
   },
   {
     q: "What payment methods do you accept?",
-    a: "We accept UPI, debit cards, credit cards, and net banking through Razorpay. All transactions are secure and encrypted.",
+    a: "We accept UPI payments (Google Pay, PhonePe, Paytm, etc.). Simply click on any paid plan, note the UPI ID shown, and complete the payment through your preferred UPI app.",
   },
   {
     q: "Is there a refund policy?",
@@ -74,6 +74,47 @@ function FAQItem({ faq }: { faq: (typeof faqs)[number] }) {
 }
 
 export default function PricingPage() {
+  const [paymentLoading, setPaymentLoading] = useState<string | null>(null);
+
+  const handlePayment = async (planId: string, price: number) => {
+    if (price === 0) {
+      window.location.href = "/signup";
+      return;
+    }
+
+    setPaymentLoading(planId);
+
+    // Show UPI payment details
+    const upiId = "aayanc@fam";
+    const amount = price;
+    const merchantName = "Opportunity OS";
+
+    // Create UPI payment link
+    const upiUrl = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(merchantName)}&am=${amount}&cu=INR`;
+
+    // Show payment modal with UPI details
+    const confirmed = window.confirm(
+      `Payment Details:\n\n` +
+      `Plan: ${planId.charAt(0).toUpperCase() + planId.slice(1)}\n` +
+      `Amount: ₹${amount}\n` +
+      `UPI ID: ${upiId}\n` +
+      `Merchant: ${merchantName}\n\n` +
+      `Click OK to proceed to UPI payment, or Cancel to go back.`
+    );
+
+    if (confirmed) {
+      // Try to open UPI app
+      window.open(upiUrl, "_blank");
+
+      // After payment, redirect to dashboard
+      setTimeout(() => {
+        window.location.href = "/dashboard";
+      }, 3000);
+    }
+
+    setPaymentLoading(null);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -133,15 +174,25 @@ export default function PricingPage() {
                     )}
                   </div>
 
-                  <Link href="/signup" className="mb-6">
-                    <Button
-                      variant={plan.popular ? "glow" : "outline"}
-                      className="w-full"
-                      size="lg"
-                    >
-                      {plan.cta}
-                    </Button>
-                  </Link>
+                  {plan.price === 0 ? (
+                    <Link href="/signup" className="mb-6 block">
+                      <Button variant={plan.popular ? "glow" : "outline"} className="w-full" size="lg">
+                        {plan.cta}
+                      </Button>
+                    </Link>
+                  ) : (
+                    <div className="mb-6">
+                      <Button
+                        variant={plan.popular ? "glow" : "outline"}
+                        className="w-full"
+                        size="lg"
+                        loading={paymentLoading === plan.planId}
+                        onClick={() => handlePayment(plan.planId, plan.price)}
+                      >
+                        {plan.cta}
+                      </Button>
+                    </div>
+                  )}
 
                   {/* Features */}
                   <ul className="space-y-2.5 mb-4">

@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
 interface AdminAuthContextType {
   isAdmin: boolean;
@@ -17,17 +17,21 @@ const ADMIN_CREDENTIALS = {
 };
 
 export function AdminAuthProvider({ children }: { children: ReactNode }) {
-  const [adminUser, setAdminUser] = useState<string | null>(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("admin_user");
+  const [adminUser, setAdminUser] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    const saved = localStorage.getItem("opp-os-admin");
+    if (saved) {
+      setAdminUser(saved);
     }
-    return null;
-  });
+  }, []);
 
   const login = (username: string, password: string): boolean => {
     if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
       setAdminUser(username);
-      localStorage.setItem("admin_user", username);
+      localStorage.setItem("opp-os-admin", username);
       return true;
     }
     return false;
@@ -35,7 +39,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
 
   const logout = () => {
     setAdminUser(null);
-    localStorage.removeItem("admin_user");
+    localStorage.removeItem("opp-os-admin");
   };
 
   return (
